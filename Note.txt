@@ -1,4 +1,133 @@
-spring.datasource.url=jdbc:mariadb://localhost:3388/shoppingdata?useUnicode=true&characterEncoding=utf-8&connectionCollation=utf8mb4_unicode_ci&useSSL=false
-spring.datasource.hikari.data-source-properties.useUnicode=true
-spring.datasource.hikari.data-source-properties.characterEncoding=UTF-8
-spring.datasource.hikari.data-source-properties.characterSetResults=UTF-8
+-- Tạo database
+CREATE DATABASE IF NOT EXISTS shoppingdata;
+USE shoppingdata;
+
+-- Drop tables if exists (for reset)
+DROP TABLE IF EXISTS comments;
+DROP TABLE IF EXISTS orderlines;
+DROP TABLE IF EXISTS orders;
+DROP TABLE IF EXISTS products;
+DROP TABLE IF EXISTS customers;
+DROP TABLE IF EXISTS users;
+
+-- Tạo bảng products
+CREATE TABLE products (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    price DOUBLE NOT NULL,
+    stock_quantity INT
+);
+
+-- Tạo bảng customers
+CREATE TABLE customers (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    phone VARCHAR(20),
+    address VARCHAR(500)
+);
+
+-- Tạo bảng orders
+CREATE TABLE orders (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    order_date DATETIME NOT NULL,
+    status VARCHAR(50),
+    total_amount DOUBLE,
+    customer_id BIGINT NOT NULL,
+    FOREIGN KEY (customer_id) REFERENCES customers(id)
+);
+
+-- Tạo bảng orderlines
+CREATE TABLE orderlines (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    quantity INT NOT NULL,
+    price DOUBLE NOT NULL,
+    order_id BIGINT NOT NULL,
+    product_id BIGINT NOT NULL,
+    FOREIGN KEY (order_id) REFERENCES orders(id),
+    FOREIGN KEY (product_id) REFERENCES products(id)
+);
+
+-- Tạo bảng comments
+CREATE TABLE comments (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    content TEXT NOT NULL,
+    created_date DATETIME NOT NULL,
+    product_id BIGINT NOT NULL,
+    FOREIGN KEY (product_id) REFERENCES products(id)
+);
+
+-- Insert dữ liệu mẫu cho products
+INSERT INTO products (name, description, price, stock_quantity) VALUES
+('Laptop Dell XPS 13', 'Laptop cao cấp, màn hình 13 inch', 25000000.0, 15),
+('iPhone 15 Pro', 'Điện thoại thông minh Apple', 28000000.0, 20),
+('Samsung Galaxy S24', 'Điện thoại Samsung flagship', 22000000.0, 18),
+('AirPods Pro 2', 'Tai nghe không dây Apple', 6500000.0, 30),
+('iPad Air M2', 'Máy tính bảng Apple', 16000000.0, 12),
+('MacBook Pro 14', 'Laptop Apple M3 Pro', 52000000.0, 8),
+('Sony WH-1000XM5', 'Tai nghe chống ồn cao cấp', 8500000.0, 25),
+('Samsung Galaxy Tab S9', 'Máy tính bảng Samsung', 18000000.0, 15);
+
+-- Insert dữ liệu mẫu cho customers
+INSERT INTO customers (name, email, phone, address) VALUES
+('Nguyễn Văn An', 'nguyenvanan@gmail.com', '0901234567', '123 Lê Lợi, Q1, TP.HCM'),
+('Trần Thị Bình', 'tranthibinh@gmail.com', '0912345678', '456 Nguyễn Huệ, Q1, TP.HCM'),
+('Lê Văn Cường', 'levancuong@gmail.com', '0923456789', '789 Trần Hưng Đạo, Q5, TP.HCM'),
+('Phạm Thị Dung', 'phamthidung@gmail.com', '0934567890', '321 Điện Biên Phủ, Q3, TP.HCM'),
+('Hoàng Văn Em', 'hoangvanem@gmail.com', '0945678901', '654 Võ Văn Tần, Q3, TP.HCM');
+
+-- Insert dữ liệu mẫu cho orders
+INSERT INTO orders (order_date, status, total_amount, customer_id) VALUES
+('2025-10-11 10:30:00', 'CONFIRMED', 38000000.0, 1),
+('2025-10-06 14:15:00', 'DELIVERED', 34500000.0, 2),
+('2025-10-14 09:20:00', 'SHIPPED', 60500000.0, 3),
+('2025-10-15 16:45:00', 'PENDING', 16000000.0, 1),
+('2025-10-13 11:00:00', 'CONFIRMED', 62000000.0, 4);
+
+-- Insert dữ liệu mẫu cho orderlines
+-- Order 1: Laptop Dell XPS 13 (1) + AirPods Pro 2 (2)
+INSERT INTO orderlines (quantity, price, order_id, product_id) VALUES
+(1, 25000000.0, 1, 1),
+(2, 6500000.0, 1, 4);
+
+-- Order 2: iPhone 15 Pro (1) + AirPods Pro 2 (1)
+INSERT INTO orderlines (quantity, price, order_id, product_id) VALUES
+(1, 28000000.0, 2, 2),
+(1, 6500000.0, 2, 4);
+
+-- Order 3: MacBook Pro 14 (1) + Sony WH-1000XM5 (1)
+INSERT INTO orderlines (quantity, price, order_id, product_id) VALUES
+(1, 52000000.0, 3, 6),
+(1, 8500000.0, 3, 7);
+
+-- Order 4: iPad Air M2 (1)
+INSERT INTO orderlines (quantity, price, order_id, product_id) VALUES
+(1, 16000000.0, 4, 5);
+
+-- Order 5: Samsung Galaxy S24 (2) + Samsung Galaxy Tab S9 (1)
+INSERT INTO orderlines (quantity, price, order_id, product_id) VALUES
+(2, 22000000.0, 5, 3),
+(1, 18000000.0, 5, 8);
+
+-- Insert dữ liệu mẫu cho comments
+INSERT INTO comments (content, created_date, product_id) VALUES
+('Sản phẩm rất tốt, giao hàng nhanh!', '2025-10-13 14:30:00', 1),
+('iPhone 15 Pro quá đẹp, camera tuyệt vời!', '2025-10-14 10:15:00', 2),
+('Laptop chạy mượt mà, đáng đồng tiền bát gạo.', '2025-10-15 16:20:00', 1);
+
+-- Hiển thị dữ liệu đã insert
+SELECT 'Products:' as '';
+SELECT * FROM products;
+
+SELECT 'Customers:' as '';
+SELECT * FROM customers;
+
+SELECT 'Orders:' as '';
+SELECT * FROM orders;
+
+SELECT 'OrderLines:' as '';
+SELECT * FROM orderlines;
+
+SELECT 'Comments:' as '';
+SELECT * FROM comments;
